@@ -8,6 +8,24 @@
 #include "GameFramework/Actor.h"
 #include "TerrainChunk.generated.h"
 
+USTRUCT() struct FTerrainData
+{
+	GENERATED_BODY()
+
+	double Seed;
+	float Scale;
+	int Octaves;
+	float SurfaceFrequency;
+	float CaveFrequency;
+	int NoiseScale;
+	int SurfaceLevel;
+	int CaveLevel;
+	int OverallNoiseScale;
+	int SurfaceNoiseScale;
+	bool GenerateCaves;
+	int CaveNoiseScale;
+};
+
 UCLASS()
 class WORLDGEN_API ATerrainChunk : public AActor
 {
@@ -25,24 +43,27 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void GenerateTerrain();
+	void GenerateTerrain(FTerrainData* worldData);
 
 	// Implicit function to evaluate with marching cubes algorithm to generate density values
 	static double PerlinWrapper(UE::Math::TVector<double> perlinInput);
 
 	static float FractalBrownianMotion(FVector fractalInput, float octaves, float frequency);
 
+	TArray<FVector> CalculateNormals(TArray<FVector> vertices, TArray<int32> indices);
+
 	UPROPERTY(EditAnywhere)
 	UProceduralMeshComponent* TerrainMesh;
 
+	FTerrainData* WorldData;
+
 	// Tile generation bounds
 	UPROPERTY(EditAnywhere)
-	int GridSizeX = 256;
+	double GridSizeX = 256;
 
 	UPROPERTY(EditAnywhere)
-	int GridSizeY = 256;
+	double GridSizeY = 256;
 
 	UPROPERTY(EditAnywhere)
-	int GridSizeZ = 1024;
-
+	double GridSizeZ = 1000;
 };
