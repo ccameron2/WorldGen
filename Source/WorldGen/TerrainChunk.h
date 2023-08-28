@@ -43,7 +43,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void GenerateTerrain(FTerrainData* worldData);
+	void Init(FTerrainData* worldData);
+
+	void GenerateTerrainData();
 
 	// Implicit function to evaluate with marching cubes algorithm to generate density values
 	static double PerlinWrapper(UE::Math::TVector<double> perlinInput);
@@ -51,6 +53,8 @@ public:
 	static float FractalBrownianMotion(FVector fractalInput, float octaves, float frequency);
 
 	TArray<FVector> CalculateNormals(TArray<FVector> vertices, TArray<int32> indices);
+
+	void CreateMesh();
 
 	UPROPERTY(EditAnywhere)
 	UProceduralMeshComponent* TerrainMesh;
@@ -66,4 +70,27 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	double GridSizeZ = 1000;
+
+	// Data for mesh generation
+	UPROPERTY()
+	TArray<FVector> Vertices;
+
+	UPROPERTY()
+	TArray<int32> Triangles;
+
+	UPROPERTY()
+	TArray<FVector> Normals;
+
+	UPROPERTY()
+	TArray<FVector2D> UV0;
+
+	UPROPERTY()
+	TArray<FColor> VertexColour;
+
+	UPROPERTY()
+	TArray <FProcMeshTangent> Tangents;
+
+	UPROPERTY()
+	bool MeshCreated = false;
+
 };

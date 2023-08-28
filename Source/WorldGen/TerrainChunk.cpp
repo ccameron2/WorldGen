@@ -38,31 +38,25 @@ void ATerrainChunk::Tick(float DeltaTime)
 
 }
 
-void ATerrainChunk::GenerateTerrain(FTerrainData* worldData)
+void ATerrainChunk::Init(FTerrainData* worldData)
+{
+	WorldData = worldData;
+}
+
+void ATerrainChunk::GenerateTerrainData()
 {
 	// Assign static variables
-	Seed = worldData->Seed;
-	Octaves = worldData->Octaves;
-	SurfaceFrequency = worldData->SurfaceFrequency;
-	CaveFrequency = worldData->CaveFrequency;
-	NoiseScale = worldData->NoiseScale;
-	SurfaceLevel = worldData->SurfaceLevel;
-	CaveLevel = worldData->CaveLevel;
-	OverallNoiseScale = worldData->OverallNoiseScale;
-	SurfaceNoiseScale = worldData->SurfaceNoiseScale;
-	GenerateCaves = worldData->GenerateCaves;
-	CaveNoiseScale = worldData->CaveNoiseScale;
-
-	// Data for mesh building
-	int32 sectionIndex = 0;
-	TArray<FVector> vertices;
-	TArray<int32> triangles;
-	TArray<FVector> normals;
-	TArray<FVector2D> uv0;
-	TArray<FVector4> vertexColour;
-	TArray<FColor> procVertexColour;
-	TArray<FProcMeshTangent> tangents;
-
+	Seed = WorldData->Seed;
+	Octaves = WorldData->Octaves;
+	SurfaceFrequency = WorldData->SurfaceFrequency;
+	CaveFrequency = WorldData->CaveFrequency;
+	NoiseScale = WorldData->NoiseScale;
+	SurfaceLevel = WorldData->SurfaceLevel;
+	CaveLevel = WorldData->CaveLevel;
+	OverallNoiseScale = WorldData->OverallNoiseScale;
+	SurfaceNoiseScale = WorldData->SurfaceNoiseScale;
+	GenerateCaves = WorldData->GenerateCaves;
+	CaveNoiseScale = WorldData->CaveNoiseScale;
 
 	// Create bounding box to run marching cubes inside
 	UE::Geometry::FAxisAlignedBox3d boundingBox(FVector3d(GetActorLocation()) - (FVector3d{ GridSizeX, GridSizeY, 0 } / 2), 
@@ -76,17 +70,17 @@ void ATerrainChunk::GenerateTerrain(FTerrainData* worldData)
 	marchingCubes->Generate();
 
 	auto numVerts = marchingCubes->Vertices.Num();
-	triangles.Init(0, marchingCubes->Triangles.Num() * 3);
-	vertices.Init(FVector{ 0,0,0 }, numVerts);
+	Triangles.Init(0, marchingCubes->Triangles.Num() * 3);
+	Vertices.Init(FVector{ 0,0,0 }, numVerts);
 
 	if (numVerts > 0)
 	{
 		int index = 0;
 		for (int i = 0; i < marchingCubes->Triangles.Num(); i++)
 		{
-			triangles[index] = (marchingCubes->Triangles[i].A);
-			triangles[index + 1] = (marchingCubes->Triangles[i].B);
-			triangles[index + 2] = (marchingCubes->Triangles[i].C);
+			Triangles[index] = (marchingCubes->Triangles[i].A);
+			Triangles[index + 1] = (marchingCubes->Triangles[i].B);
+			Triangles[index + 2] = (marchingCubes->Triangles[i].C);
 			index += 3;
 		}
 
@@ -94,17 +88,12 @@ void ATerrainChunk::GenerateTerrain(FTerrainData* worldData)
 		{
 			auto vertex = marchingCubes->Vertices[i];
 			vertex -= GetActorLocation();
-			vertex *= worldData->Scale;			
-			vertices[i] = vertex;
+			vertex *= WorldData->Scale;			
+			Vertices[i] = vertex;
 		}
 
-		normals = CalculateNormals(vertices,triangles);
+		Normals = CalculateNormals(Vertices,Triangles);
 	}
-
-	// Set material to terrain material and generate procedural mesh with parameters from marching cubes and calculated normals
-	TerrainMesh->ClearAllMeshSections();
-	//TerrainMesh->SetMaterial(0, Material);
-	TerrainMesh->CreateMeshSection(0, vertices, triangles, normals, uv0, procVertexColour, tangents, false);
 }
 
 double ATerrainChunk::PerlinWrapper(UE::Math::TVector<double> perlinInput)
@@ -255,4 +244,17 @@ TArray<FVector> ATerrainChunk::CalculateNormals(TArray<FVector> vertices, TArray
 	}
 
 	return normals;
+}
+
+void ATerrainChunk::CreateMesh()
+{
+	if (!MeshCreated)
+	{
+		// Set material to terrain material and generate procedural mesh with parameters from marching cubes and calculated normals
+		TerrainMesh->ClearAllMeshSections();
+		//TerrainMesh->SetMaterial(0, Material);
+		TerrainMesh->CreateMeshSection(0, Vertices, Triangles, Normals, UV0, VertexColour, Tangents, false);
+
+		MeshCreated = true;
+	}
 }

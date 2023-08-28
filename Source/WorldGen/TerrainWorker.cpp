@@ -46,9 +46,10 @@ uint32 FTerrainWorker::Run()
 					if (!tile->MeshCreated)
 					{
 						// Run marching cubes and generate mesh data
-						tile->GenerateTerrain();
+						tile->GenerateTerrainData();
 					}
 				}
+				
 				// Set work as completed
 				ThreadComplete = true;
 			}

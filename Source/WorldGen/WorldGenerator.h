@@ -4,6 +4,9 @@
 
 #include "TerrainChunk.h"
 
+#include "TerrainWorker.h"
+#include <memory>
+
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WorldGenerator.generated.h"
@@ -30,4 +33,43 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ATerrainChunk> TerrainClass;
+
+	// Array to keep track of tiles
+	UPROPERTY(VisibleAnywhere)
+	TArray<ATerrainChunk*> ChunkArray;
+
+	// Number of tiles to place in each direction
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
+	int RenderDistance = 5;
+
+	// Size (x,y) of each tile
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
+	int ChunkSize = 256;
+
+	// Height of each tile
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
+	int ChunkHeight = 1000;
+
+	// Scale of the mesh generated
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
+	int Scale = 50;
+
+	// Begin spawning new tiles in required locations
+	void CreateChunkArray();
+
+	// Returns player grid position
+	FVector2D GetPlayerGridPosition();
+
+	// Returns tile grid position
+	FVector2D GetChunkPosition(int index);
+
+	// Returns false if theres is no tile at position
+	bool IsAlreadyThere(FVector2D position);
+
+	// Last player position recorded
+	FVector2D LastPlayerPosition = { 0,0 };
+
+	// Multithreading worker for terrain generation
+	std::unique_ptr<FTerrainWorker> TerrainWorker;
+
 };
