@@ -44,15 +44,15 @@ public:
 
 	// Size (x,y) of each tile
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
-	int ChunkSize = 256;
+	float ChunkSize = 256;
 
 	// Height of each tile
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
-	int ChunkHeight = 1000;
+	float ChunkHeight = 1000;
 
 	// Scale of the mesh generated
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
-	int Scale = 50;
+	int Scale = 1;
 
 	// Begin spawning new tiles in required locations
 	void CreateChunkArray();

@@ -13,6 +13,8 @@ USTRUCT() struct FTerrainData
 	GENERATED_BODY()
 
 	double Seed;
+	float GridSize;
+	float GridHeight;
 	float Scale;
 	int Octaves;
 	float SurfaceFrequency;
@@ -59,34 +61,23 @@ public:
 	UPROPERTY(EditAnywhere)
 	UProceduralMeshComponent* TerrainMesh;
 
+	// Terrain material
+	UPROPERTY(VisibleAnywhere)
+	UMaterialInterface* Material;
+
 	FTerrainData* WorldData;
-
-	// Tile generation bounds
-	UPROPERTY(EditAnywhere)
-	double GridSizeX = 256;
-
-	UPROPERTY(EditAnywhere)
-	double GridSizeY = 256;
-
-	UPROPERTY(EditAnywhere)
-	double GridSizeZ = 1000;
 
 	// Data for mesh generation
 	UPROPERTY()
 	TArray<FVector> Vertices;
-
 	UPROPERTY()
 	TArray<int32> Triangles;
-
 	UPROPERTY()
 	TArray<FVector> Normals;
-
 	UPROPERTY()
 	TArray<FVector2D> UV0;
-
 	UPROPERTY()
 	TArray<FColor> VertexColour;
-
 	UPROPERTY()
 	TArray <FProcMeshTangent> Tangents;
 

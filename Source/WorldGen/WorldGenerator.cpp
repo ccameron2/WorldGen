@@ -17,7 +17,9 @@ void AWorldGenerator::BeginPlay()
 	Super::BeginPlay();
 
 	WorldData.Seed = 69420;
-	WorldData.Scale = 50;
+	WorldData.GridSize = ChunkSize;
+	WorldData.GridHeight = ChunkHeight;
+	WorldData.Scale = Scale;
 	WorldData.Octaves = 10;
 	WorldData.SurfaceFrequency = 0.35;
 	WorldData.CaveFrequency = 1;
@@ -122,7 +124,7 @@ void AWorldGenerator::Tick(float DeltaTime)
 			auto Distance = (PlayerLocation - TileLocation).Size();
 
 			// Max distance to delete tiles
-			auto MaxDistance = (((RenderDistance + 1) * ChunkSize));
+			auto MaxDistance = (RenderDistance * ChunkSize * Scale);
 
 			// If the tile is further than the max distance
 			if (Distance >= MaxDistance)
@@ -173,10 +175,10 @@ void AWorldGenerator::CreateChunkArray()
 		for (int y = -RenderDistance; y < RenderDistance; y++)
 		{
 			// If there is room for a tile
-			if (!IsAlreadyThere(FVector2D{ PlayerGridPosition.X + x,PlayerGridPosition.Y + y }))
+			if (!IsAlreadyThere(FVector2D{ PlayerGridPosition.X + x, PlayerGridPosition.Y + y }))
 			{
 				// Create spawn parameters
-				FVector Location(((PlayerGridPosition.X + x) * ChunkSize) /** Scale*/, ((PlayerGridPosition.Y + y) * ChunkSize) /** Scale*/, 0.0f);
+				FVector Location(((PlayerGridPosition.X + x) * ChunkSize * Scale), ((PlayerGridPosition.Y + y) * ChunkSize * Scale), 0.0f);
 				FRotator Rotation(0.0f, 0.0f, 0.0f);
 				FTransform SpawnParams(Rotation, Location);
 

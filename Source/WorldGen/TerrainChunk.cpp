@@ -23,6 +23,11 @@ ATerrainChunk::ATerrainChunk()
 
 	TerrainMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Procedural Mesh"));
 	SetRootComponent(TerrainMesh);
+
+	// Get material by name from editor and set as mesh material
+	static ConstructorHelpers::FObjectFinder<UMaterial> TerrainMaterial(TEXT("Material'/Game/Materials/M_Terrain_Master'"));
+	Material = TerrainMaterial.Object;
+
 }
 
 // Called when the game starts or when spawned
@@ -59,12 +64,18 @@ void ATerrainChunk::GenerateTerrainData()
 	CaveNoiseScale = WorldData->CaveNoiseScale;
 
 	// Create bounding box to run marching cubes inside
-	UE::Geometry::FAxisAlignedBox3d boundingBox(FVector3d(GetActorLocation()) - (FVector3d{ GridSizeX, GridSizeY, 0 } / 2), 
-												FVector3d(GetActorLocation()) + FVector3d{ GridSizeX / 2, GridSizeY / 2, GridSizeZ });
+	UE::Geometry::FAxisAlignedBox3d boundingBox(FVector3d(GetActorLocation() / WorldData->Scale) - (FVector3d{ WorldData->GridSize, WorldData->GridSize, 0 } / 2),
+												FVector3d(GetActorLocation() / WorldData->Scale) + FVector3d{ WorldData->GridSize / 2, WorldData->GridSize / 2, WorldData->GridHeight });
+
+	if (GetActorLocation() == FVector{ -256,0,0 })
+	{
+		CaveLevel = 9;
+	}
 
 	std::unique_ptr<UE::Geometry::FMarchingCubes> marchingCubes = std::make_unique<UE::Geometry::FMarchingCubes>();
 	marchingCubes->Bounds = boundingBox;
 	marchingCubes->Implicit = ATerrainChunk::PerlinWrapper; // Function to evaluate for density values
+	marchingCubes->bParallelCompute = true;
 	marchingCubes->CubeSize = 16;
 	marchingCubes->IsoValue = 0;
 	marchingCubes->Generate();
@@ -87,7 +98,7 @@ void ATerrainChunk::GenerateTerrainData()
 		for (int i = 0; i < marchingCubes->Vertices.Num(); i++)
 		{
 			auto vertex = marchingCubes->Vertices[i];
-			vertex -= GetActorLocation();
+			vertex -= GetActorLocation() / WorldData->Scale;
 			vertex *= WorldData->Scale;			
 			Vertices[i] = vertex;
 		}
@@ -205,10 +216,23 @@ TArray<FVector> ATerrainChunk::CalculateNormals(TArray<FVector> vertices, TArray
 		}
 	}
 	
+	TArray<FVector> nTriangles;
+	nTriangles.Init(FVector{}, indices.Num() / 3);
+
+	int index = 0;
+	for (int i = 0; i < nTriangles.Num(); i++)
+	{
+		nTriangles[i].X = indices[index];
+		nTriangles[i].Y = indices[index + 1];
+		nTriangles[i].Z = indices[index + 2];
+		index += 3;
+	}
+
+
 	// For each vertex collect the triangles that share it and calculate the face normal
 	for (int i = 0; i < vertices.Num(); i++)
 	{
-		int index = 0;
+		index = 0;
 		for (auto& triangle : VertToTriMap[i])
 		{
 			// This shouldnt happen
@@ -218,9 +242,9 @@ TArray<FVector> ATerrainChunk::CalculateNormals(TArray<FVector> vertices, TArray
 			}
 
 			// Get vertices from triangle index
-			auto A = vertices[indices[index]];
-			auto B = vertices[indices[index + 1]];
-			auto C = vertices[indices[index + 2]];
+			auto A = vertices[nTriangles[triangle].X];
+			auto B = vertices[nTriangles[triangle].Y];
+			auto C = vertices[nTriangles[triangle].Z];
 	
 			// Calculate edges
 			auto E1 = A - B;
@@ -252,7 +276,7 @@ void ATerrainChunk::CreateMesh()
 	{
 		// Set material to terrain material and generate procedural mesh with parameters from marching cubes and calculated normals
 		TerrainMesh->ClearAllMeshSections();
-		//TerrainMesh->SetMaterial(0, Material);
+		TerrainMesh->SetMaterial(0, Material);
 		TerrainMesh->CreateMeshSection(0, Vertices, Triangles, Normals, UV0, VertexColour, Tangents, false);
 
 		MeshCreated = true;
