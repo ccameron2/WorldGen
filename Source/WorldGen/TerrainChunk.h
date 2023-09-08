@@ -16,6 +16,7 @@ USTRUCT() struct FTerrainData
 	float GridSize;
 	float GridHeight;
 	float Scale;
+	int CubeSize;
 	int Octaves;
 	float SurfaceFrequency;
 	float CaveFrequency;
@@ -64,6 +65,11 @@ public:
 	// Terrain material
 	UPROPERTY(VisibleAnywhere)
 	UMaterialInterface* Material;
+
+	// DEBUG
+	UPROPERTY(VisibleAnywhere)
+	int CubeSize = 0;
+
 
 	FTerrainData* WorldData;
 

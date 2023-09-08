@@ -76,9 +76,15 @@ void ATerrainChunk::GenerateTerrainData()
 	marchingCubes->Bounds = boundingBox;
 	marchingCubes->Implicit = ATerrainChunk::PerlinWrapper; // Function to evaluate for density values
 	marchingCubes->bParallelCompute = true;
-	marchingCubes->CubeSize = 16;
+	if (WorldData->CubeSize == 16)
+	{
+		marchingCubes->bParallelCompute = false;
+	}
+	marchingCubes->CubeSize = WorldData->CubeSize;
 	marchingCubes->IsoValue = 0;
 	marchingCubes->Generate();
+
+	CubeSize = WorldData->CubeSize;
 
 	auto numVerts = marchingCubes->Vertices.Num();
 	Triangles.Init(0, marchingCubes->Triangles.Num() * 3);

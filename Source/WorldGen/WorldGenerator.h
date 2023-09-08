@@ -40,7 +40,7 @@ public:
 
 	// Number of tiles to place in each direction
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
-	int RenderDistance = 5;
+	int RenderDistance = 12;
 
 	// Size (x,y) of each tile
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
@@ -55,7 +55,7 @@ public:
 	int Scale = 1;
 
 	// Begin spawning new tiles in required locations
-	void CreateChunkArray();
+	bool CreateChunkArray();
 
 	// Returns player grid position
 	FVector2D GetPlayerGridPosition();
@@ -71,5 +71,7 @@ public:
 
 	// Multithreading worker for terrain generation
 	std::unique_ptr<FTerrainWorker> TerrainWorker;
+
+	bool WorkerStarted = false;
 
 };

@@ -20,6 +20,7 @@ void AWorldGenerator::BeginPlay()
 	WorldData.GridSize = ChunkSize;
 	WorldData.GridHeight = ChunkHeight;
 	WorldData.Scale = Scale;
+	WorldData.CubeSize = 16;
 	WorldData.Octaves = 10;
 	WorldData.SurfaceFrequency = 0.35;
 	WorldData.CaveFrequency = 1;
@@ -28,7 +29,7 @@ void AWorldGenerator::BeginPlay()
 	WorldData.CaveLevel = 400;
 	WorldData.OverallNoiseScale = 16;
 	WorldData.SurfaceNoiseScale = 12;
-	WorldData.GenerateCaves = true;
+	WorldData.GenerateCaves = false;
 	WorldData.CaveNoiseScale = 6;
 
 	// Initialize tiles
@@ -93,6 +94,7 @@ void AWorldGenerator::Tick(float DeltaTime)
 					FTransform SpawnParams(tile->GetActorRotation(), tile->GetActorLocation());
 					tile->FinishSpawning(SpawnParams);
 
+					WorkerStarted = false;
 					// Water can now be created
 					/*UpdateWater = true;*/
 				}
@@ -124,10 +126,10 @@ void AWorldGenerator::Tick(float DeltaTime)
 			auto Distance = (PlayerLocation - TileLocation).Size();
 
 			// Max distance to delete tiles
-			auto MaxDistance = (RenderDistance * ChunkSize * Scale);
+			auto MaxDistance = (RenderDistance * ChunkSize * Scale * 1.5f);
 
 			// If the tile is further than the max distance
-			if (Distance >= MaxDistance)
+			if (Distance > MaxDistance)
 			{
 				// Remove all owned actors from tile
 				//ChunkArray[i]->RemoveTrees();
@@ -142,28 +144,36 @@ void AWorldGenerator::Tick(float DeltaTime)
 		}
 	}
 
+	if (!WorkerStarted)
+	{
+		if (CreateChunkArray())
+		{
+			// If the multithreading worker has completed
+			if (TerrainWorker->ThreadComplete)
+			{
+				// Restart the multithreading worker with the new tiles
+				TerrainWorker->InputChunks(ChunkArray);
+				TerrainWorker->ThreadComplete = false;
+				WorkerStarted = true;
+			}
+		}
+	}
+	
 
 	// If the player's grid position has changed
 	if (PlayerGridPosition != LastPlayerPosition)
 	{
-		// Create any new tiles
-		CreateChunkArray();
-
-		// If the multithreading worker has completed
-		if (TerrainWorker->ThreadComplete)
-		{
-			// Restart the multithreading worker with the new tiles
-			TerrainWorker->InputChunks(ChunkArray);
-			TerrainWorker->ThreadComplete = false;
-		}
+		
 	}
 
 	// Record the last player position
 	LastPlayerPosition = PlayerGridPosition;
 }
 
-void AWorldGenerator::CreateChunkArray()
+bool AWorldGenerator::CreateChunkArray()
 {
+	bool ret = false;
+
 	// Get the player's grid position
 	auto PlayerGridPosition = GetPlayerGridPosition();
 	PlayerGridPosition.X = round(PlayerGridPosition.X);
@@ -185,13 +195,27 @@ void AWorldGenerator::CreateChunkArray()
 				// Begin the spawning of the actor. Use deferred spawning to allow mulithreading worker to complete.
 				ATerrainChunk* chunk = GetWorld()->SpawnActorDeferred<ATerrainChunk>(TerrainClass, SpawnParams);
 
+				WorldData.CubeSize = 64;
+				if (x < RenderDistance / 2 && x > -RenderDistance / 2)
+				{
+					if (y < RenderDistance / 2 && y > -RenderDistance / 2)
+					{
+						WorldData.CubeSize = 16;
+					}
+				}
+
+
 				// Initialize the tile with the values set in the editor
 				chunk->Init(&WorldData);
 
 				// Save the tile in the array
 				ChunkArray.Push(chunk);
+
+				ret = true;
 			}
 		}
 	}
+	return ret;
+
 }
 
