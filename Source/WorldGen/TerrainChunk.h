@@ -46,7 +46,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Init(FTerrainData* worldData);
+	void Init(FTerrainData worldData);
 
 	void GenerateTerrainData();
 
@@ -71,7 +71,7 @@ public:
 	int CubeSize = 0;
 
 
-	FTerrainData* WorldData;
+	FTerrainData WorldData;
 
 	// Data for mesh generation
 	UPROPERTY()

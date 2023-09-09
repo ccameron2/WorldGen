@@ -43,7 +43,7 @@ void ATerrainChunk::Tick(float DeltaTime)
 
 }
 
-void ATerrainChunk::Init(FTerrainData* worldData)
+void ATerrainChunk::Init(FTerrainData worldData)
 {
 	WorldData = worldData;
 }
@@ -51,21 +51,21 @@ void ATerrainChunk::Init(FTerrainData* worldData)
 void ATerrainChunk::GenerateTerrainData()
 {
 	// Assign static variables
-	Seed = WorldData->Seed;
-	Octaves = WorldData->Octaves;
-	SurfaceFrequency = WorldData->SurfaceFrequency;
-	CaveFrequency = WorldData->CaveFrequency;
-	NoiseScale = WorldData->NoiseScale;
-	SurfaceLevel = WorldData->SurfaceLevel;
-	CaveLevel = WorldData->CaveLevel;
-	OverallNoiseScale = WorldData->OverallNoiseScale;
-	SurfaceNoiseScale = WorldData->SurfaceNoiseScale;
-	GenerateCaves = WorldData->GenerateCaves;
-	CaveNoiseScale = WorldData->CaveNoiseScale;
+	Seed = WorldData.Seed;
+	Octaves = WorldData.Octaves;
+	SurfaceFrequency = WorldData.SurfaceFrequency;
+	CaveFrequency = WorldData.CaveFrequency;
+	NoiseScale = WorldData.NoiseScale;
+	SurfaceLevel = WorldData.SurfaceLevel;
+	CaveLevel = WorldData.CaveLevel;
+	OverallNoiseScale = WorldData.OverallNoiseScale;
+	SurfaceNoiseScale = WorldData.SurfaceNoiseScale;
+	GenerateCaves = WorldData.GenerateCaves;
+	CaveNoiseScale = WorldData.CaveNoiseScale;
 
 	// Create bounding box to run marching cubes inside
-	UE::Geometry::FAxisAlignedBox3d boundingBox(FVector3d(GetActorLocation() / WorldData->Scale) - (FVector3d{ WorldData->GridSize, WorldData->GridSize, 0 } / 2),
-												FVector3d(GetActorLocation() / WorldData->Scale) + FVector3d{ WorldData->GridSize / 2, WorldData->GridSize / 2, WorldData->GridHeight });
+	UE::Geometry::FAxisAlignedBox3d boundingBox(FVector3d(GetActorLocation() / WorldData.Scale) - (FVector3d{ WorldData.GridSize, WorldData.GridSize, 0 } / 2),
+												FVector3d(GetActorLocation() / WorldData.Scale) + FVector3d{ WorldData.GridSize / 2, WorldData.GridSize / 2, WorldData.GridHeight });
 
 	if (GetActorLocation() == FVector{ -256,0,0 })
 	{
@@ -76,15 +76,20 @@ void ATerrainChunk::GenerateTerrainData()
 	marchingCubes->Bounds = boundingBox;
 	marchingCubes->Implicit = ATerrainChunk::PerlinWrapper; // Function to evaluate for density values
 	marchingCubes->bParallelCompute = true;
-	if (WorldData->CubeSize == 16)
+
+	// DEBUG
+	if (WorldData.CubeSize == 16)
 	{
 		marchingCubes->bParallelCompute = false;
 	}
-	marchingCubes->CubeSize = WorldData->CubeSize;
+	CubeSize = WorldData.CubeSize;	
+	////
+
+	marchingCubes->CubeSize = WorldData.CubeSize;
 	marchingCubes->IsoValue = 0;
 	marchingCubes->Generate();
 
-	CubeSize = WorldData->CubeSize;
+
 
 	auto numVerts = marchingCubes->Vertices.Num();
 	Triangles.Init(0, marchingCubes->Triangles.Num() * 3);
@@ -104,8 +109,8 @@ void ATerrainChunk::GenerateTerrainData()
 		for (int i = 0; i < marchingCubes->Vertices.Num(); i++)
 		{
 			auto vertex = marchingCubes->Vertices[i];
-			vertex -= GetActorLocation() / WorldData->Scale;
-			vertex *= WorldData->Scale;			
+			vertex -= GetActorLocation() / WorldData.Scale;
+			vertex *= WorldData.Scale;			
 			Vertices[i] = vertex;
 		}
 

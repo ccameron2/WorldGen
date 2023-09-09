@@ -40,7 +40,7 @@ public:
 
 	// Number of tiles to place in each direction
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")
-	int RenderDistance = 12;
+	int RenderDistance = 18;
 
 	// Size (x,y) of each tile
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Terrain Generation|Chunks")

@@ -196,17 +196,17 @@ bool AWorldGenerator::CreateChunkArray()
 				ATerrainChunk* chunk = GetWorld()->SpawnActorDeferred<ATerrainChunk>(TerrainClass, SpawnParams);
 
 				WorldData.CubeSize = 64;
-				if (x < RenderDistance / 2 && x > -RenderDistance / 2)
+				if (x < RenderDistance / 3 && x > -RenderDistance / 3)
 				{
-					if (y < RenderDistance / 2 && y > -RenderDistance / 2)
-					{
-						WorldData.CubeSize = 16;
-					}
+					WorldData.CubeSize = 32;
+				}
+				if (y < RenderDistance / 3 && y > -RenderDistance / 3)
+				{
+					WorldData.CubeSize = 32;
 				}
 
-
 				// Initialize the tile with the values set in the editor
-				chunk->Init(&WorldData);
+				chunk->Init(WorldData);
 
 				// Save the tile in the array
 				ChunkArray.Push(chunk);
